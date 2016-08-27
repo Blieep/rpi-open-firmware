@@ -26,6 +26,10 @@ FATFS g_BootVolumeFs;
 
 #define ROOT_VOLUME_PREFIX "0:"
 
+extern "C" {
+    void bootLinux(int zero, int machineID, void* dtb, void* kernel);
+}
+
 static const char* g_BootFiles32[] = {
 	"zImage",
 	"kernel.img",
@@ -47,7 +51,7 @@ struct LoaderImpl {
             unsigned int len = f_size(fp);
             dest = (uint8_t*) malloc(len);
 
-            f_read(args, dest, len, &len);
+            f_read(fp, dest, len, &len);
 
             f_close(fp);
 
@@ -101,19 +105,9 @@ struct LoaderImpl {
                 printf("bzImage loaded at %X\n", bzImage);
 
                 printf("Jumping to the Linux kernel...\n");
-
-                /* jump to kernel */
-                __asm__ volatile(
-                        "mov r0, #0\n" \
-                        "mov r1, #3139\n" \ /* TODO: differentiate the pi's. this is B */
-                        "mov r2, %0\n" \
-                        "cli\n" \
-                        "jmp %1"
-                        ::
-                        "=g" (dtb),
-                        "=p" (bzImage));
-
-
+                
+                /* this should never return */
+                bootLinux(0, 3139, dtb, bzImage);
 	}
 };
 
