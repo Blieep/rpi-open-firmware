@@ -51,6 +51,18 @@ struct LoaderImpl {
                 /* dump cmdline.txt for test */
                 printf("cmdline.txt? %s\n", f_stat("cmdline.txt", NULL) == FR_OK ? "YES" : "NO");
 
+                FIL* args;
+                f_open(args, "cmdline.txt", FA_READ);
+
+                unsigned int len = f_size(args);
+                unsigned char* buffer = (unsigned char*) malloc(len);
+
+                f_read(args, buffer, len, &len);
+
+                printf("%s\n", buffer);
+
+                free(buffer);
+
 	}
 };
 
