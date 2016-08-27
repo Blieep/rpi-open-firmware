@@ -47,6 +47,8 @@ SDHOST driver. This used to be known as ALTMMC.
 
 #define logf(fmt, ...) printf("[EMMC:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
+#define DUMP_READ
+
 struct SdhostImpl : BlockDevice {
 	bool is_sdhc;
 	bool is_high_capacity;
@@ -369,7 +371,8 @@ struct SdhostImpl : BlockDevice {
 			printf("    Capacity: %d\n", SD_CSD_V2_CAPACITY(csd));
 			printf("    Size    : %d\n", SD_CSD_V2_C_SIZE(csd));
 
-			block_length = SD_CSD_V2_BL_LEN;
+			block_length = 1 << SD_CSD_V2_BL_LEN;
+                        capacity_bytes = (SD_CSD_V2_CAPACITY(csd) * block_length);
 		}
 		else if (SD_CSD_CSDVER(csd) == SD_CSD_CSDVER_1_0) {
 			printf("    CSD     : Ver 1.0\n");
@@ -377,6 +380,7 @@ struct SdhostImpl : BlockDevice {
 			printf("    Size    : %d\n", SD_CSD_C_SIZE(csd));
 
 			block_length = 1 << SD_CSD_READ_BL_LEN(csd);
+                        capacity_bytes = (SD_CSD_CAPACITY(csd) * block_length);
 		}
 		else {
 			printf("ERROR: Unknown CSD version 0x%x!\n", SD_CSD_CSDVER(csd));
@@ -386,9 +390,6 @@ struct SdhostImpl : BlockDevice {
 		}
 	
 		printf("    BlockLen: 0x%x\n", block_length);
-
-		/* work out the capacity of the card in bytes */
-		capacity_bytes = (SD_CSD_CAPACITY(csd) * block_length);
 
 		if (!select_card()) {
 			logf("ERROR: Failed to select card!\n");
