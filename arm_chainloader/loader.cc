@@ -86,15 +86,6 @@ struct LoaderImpl {
 
                 printf("DTB loaded at %X\n", dtb);
 
-                /* read initramfs */
-                uint8_t* initramfs;
-
-                if(!read_file("initramfs", initramfs)) {
-                    panic("Error reading initramfs");
-                }
-
-                printf("Initramfs loaded at %X\n", initramfs);
-
                 /* read the kernel */
                 uint8_t* bzImage;
 
