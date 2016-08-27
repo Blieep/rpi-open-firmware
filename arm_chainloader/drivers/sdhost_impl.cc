@@ -146,6 +146,9 @@ struct SdhostImpl : BlockDevice {
 		temp |= (SAFE_READ_THRESHOLD << SDEDM_READ_THRESHOLD_SHIFT) |
 			(SAFE_WRITE_THRESHOLD << SDEDM_WRITE_THRESHOLD_SHIFT);
 
+                udelay(300);
+                mfence();
+
 		SH_EDM = temp;
 		udelay(300);
 
@@ -168,7 +171,7 @@ struct SdhostImpl : BlockDevice {
 
 		get_response();
 
-		//printf("Cmd: 0x%x Resp: %08x %08x %08x %08x\n", current_cmd, r[0], r[1], r[2], r[3]);
+		printf("Cmd: 0x%x Resp: %08x %08x %08x %08x\n", current_cmd, r[0], r[1], r[2], r[3]);
 
 		if (SH_CMD & SH_CMD_FAIL_FLAG_SET) {
 			if (SH_HSTS & SDHSTS_ERROR_MASK) {
@@ -285,6 +288,9 @@ struct SdhostImpl : BlockDevice {
 		if (!is_high_capacity)
 			sector <<= 9;
 
+                if(!wait()) {
+                    return false;
+                }
 		send_raw(MMC_READ_BLOCK_SINGLE | SH_CMD_READ_CMD_SET | SH_CMD_BUSY_CMD_SET, sector);
 		if (!wait()) {
 			return false;
@@ -425,7 +431,7 @@ struct SdhostImpl : BlockDevice {
 		reset();
 
 		SH_HCFG &= ~SH_HCFG_WIDE_EXT_BUS_SET;
-		SH_HCFG = SH_HCFG_SLOW_CARD_SET | SH_HCFG_WIDE_INT_BUS_SET;
+		SH_HCFG = /*SH_HCFG_SLOW_CARD_SET | */SH_HCFG_WIDE_INT_BUS_SET;
 		SH_CDIV = 0x96;
 
 		udelay(300);

@@ -36,8 +36,22 @@ struct LoaderImpl {
 		return f_stat(path, NULL) == FR_OK;
 	}
 
-	bool read_file(const char* path, uintptr_t dest) {
+	bool read_file(const char* path, uint8_t* dest) {
+            /* ensure file exists first */
+            if(!file_exists(path)) return false;
 
+            /* read entire file into buffer */
+            FIL* fp;
+            f_open(fp, path, FA_READ);
+
+            unsigned int len = f_size(fp);
+            dest = (uint8_t*) malloc(len);
+
+            f_read(args, dest, len, &len);
+
+            f_close(fp);
+
+            return true;
 	}
 
 	LoaderImpl() {
@@ -49,17 +63,13 @@ struct LoaderImpl {
 		logf("Boot partition mounted!\n");
 
                 /* dump cmdline.txt for test */
-                printf("cmdline.txt? %s\n", f_stat("cmdline.txt", NULL) == FR_OK ? "YES" : "NO");
+                uint8_t* arguments;
 
-                FIL* args;
-                f_open(args, "cmdline.txt", FA_READ);
+                if(!read_file("cmdline.txt", arguments)) {
+                    panic("Error reading cmdline arguments");
+                }
 
-                unsigned int len = f_size(args);
-                unsigned char* buffer = (unsigned char*) malloc(len);
-
-                f_read(args, buffer, len, &len);
-
-                printf("%s\n", buffer);
+                printf("\n%s\n", arguments);
 
                 free(buffer);
 
