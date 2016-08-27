@@ -71,7 +71,48 @@ struct LoaderImpl {
 
                 printf("\n%s\n", arguments);
 
-                free(buffer);
+                free(arguments);
+
+                /* read device tree blob */
+                uint8_t* dtb;
+
+                if(!read_file("rpi.dtb", dtb)) {
+                    panic("Error reading device tree blob");
+                }
+
+                printf("DTB loaded at %X\n", dtb);
+
+                /* read initramfs */
+                uint8_t* initramfs;
+
+                if(!read_file("initramfs", initramfs)) {
+                    panic("Error reading initramfs");
+                }
+
+                printf("Initramfs loaded at %X\n", initramfs);
+
+                /* read the kernel */
+                uint8_t* bzImage;
+
+                if(!read_file("bzImage", bzImage)) {
+                    panic("Error reading bzImage");
+                }
+
+                printf("bzImage loaded at %X\n", bzImage);
+
+                printf("Jumping to the Linux kernel...\n");
+
+                /* jump to kernel */
+                __asm__ volatile(
+                        "mov r0, #0\n" \
+                        "mov r1, #3139\n" \ /* TODO: differentiate the pi's. this is B */
+                        "mov r2, %0\n" \
+                        "cli\n" \
+                        "jmp %1"
+                        ::
+                        "=g" (dtb),
+                        "=p" (bzImage));
+
 
 	}
 };
