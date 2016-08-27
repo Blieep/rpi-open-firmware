@@ -48,6 +48,8 @@ struct LoaderImpl {
 		}
 		logf("Boot partition mounted!\n");
 
+                /* dump cmdline.txt for test */
+                printf("cmdline.txt? %s\n", f_stat("cmdline.txt", NULL) == FR_OK ? "YES" : "NO");
 
 	}
 };
