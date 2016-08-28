@@ -51,30 +51,30 @@ _start:
 	 */
 .macro RegisterISR label, exception_number
 	lea r2, fleh_\label
+        mov r1, #(0x1B000 + 4*\exception_number)
 	st r2, (r1)
-	add r1, #4
 .endm
 
 .macro RegisterIRQ label, exception_number
-        RegisterISR label, exception_number
+        RegisterISR \label, \exception_number
 .endm
 
-	RegisterISR zero, #0
-	RegisterISR misaligned, #1
-	RegisterISR dividebyzero, #2
-	RegisterISR undefinedinstruction, #3
-	RegisterISR forbiddeninstruction, #4
-	RegisterISR illegalmemory, #5
-	RegisterISR buserror, #6
-	RegisterISR floatingpoint, #7
-	RegisterISR isp, #8
-	RegisterISR dummy, #9
-	RegisterISR icache, #10
-	RegisterISR veccore, #11
-	RegisterISR badl2alias, #12
-	RegisterISR breakpoint, #13
+	RegisterISR zero, 0
+	RegisterISR misaligned, 1
+	RegisterISR dividebyzero, 2
+	RegisterISR undefinedinstruction, 3
+	RegisterISR forbiddeninstruction, 4
+	RegisterISR illegalmemory, 5
+	RegisterISR buserror, 6
+	RegisterISR floatingpoint, 7
+	RegisterISR isp, 8
+	RegisterISR dummy, 9
+	RegisterISR icache, 10
+	RegisterISR veccore, 11
+	RegisterISR badl2alias, 12
+	RegisterISR breakpoint, 13
 
-        RegisterIRQ monitor_irq, #94 /* ARM interrupt */
+        RegisterIRQ monitor_irq, 94 /* ARM interrupt */
 
 	/*
 	 * load the interrupt and normal stack pointers. these
@@ -156,29 +156,22 @@ delayloop2:
 	stm r16-r23, (--sp)
 .endm
 
-.macro SaveRegsAll
-	SaveRegsLower
-	SaveRegsUpper
-.endm
-
-fatal_exception:
-	SaveRegsUpper
-	mov r0, sp
-	b sleh_fatal
-
 .macro ExceptionHandler label, exception_number
 fleh_\label:
 	SaveRegsLower
 	mov r1, \exception_number
-	b fatal_exception
+        SaveRegsUpper
+        mov r0, sp
+        b sleh_fatal
 .endm
 
 .macro IRQHandler label, number
 fleh_\label:
-        SaveRegsAll
+        SaveRegsLower
+        SaveRegsUpper
 
         mov r1, \number
-        bl label
+        bl \label
 
         ldm r16-r23, (sp++)
 	ldm r6-r15, (sp++)
