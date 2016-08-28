@@ -24,13 +24,17 @@ void monitor_irq() {
     printf("You've got mail!\n");
 
     /* read mail */
+    printf("reading...\n");
     uint32_t letter = mmio_read32(ARM_1_MAIL1_RD);
+    printf("Read\n");
+
+    printf("Letter: %X\n", letter);
 
     int channel = letter & 0xF;
     int message = letter >> 4;
 
-    printf("Channel: %d\n");
-    printf("Message: %X\n");
+    printf("Channel: %d\n", channel);
+    printf("Message: %X\n", message);
 }
 
 void monitor_start() {
