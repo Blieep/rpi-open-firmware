@@ -27,18 +27,9 @@ void monitor_irq() {
 void monitor_start() {
 	printf("Starting IPC monitor ...\n");
 
-        /* dump status */
-        printf("Status --- %X\n", mmio_read32(0x7E00B9B8));
-
-        /* enable IRQ */
+        /* enable mailbox IRQ */
         mmio_write32(0x7E00B9BC, 0x1);
 
-        for(;;) {
-            if(mmio_read32(0x7E00B9B8) != 0x40000000) {
-                printf("Squeal!\n");
-            }
-        }
-
-	__asm__ __volatile__ ("sleep" :::);
-        for(;;);
+        /* wait for interrupts */
+        for(;;) __asm__ __volatile__ ("sleep" :::);
 }
