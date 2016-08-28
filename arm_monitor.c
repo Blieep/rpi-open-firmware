@@ -21,7 +21,7 @@ First stage monitor.
 #include "hardware.h"
 
 void monitor_irq() {
-
+    printf("You've got mail!\n");
 }
 
 void monitor_start() {

@@ -55,6 +55,10 @@ _start:
 	add r1, #4
 .endm
 
+.macro RegisterIRQ label, exception_number
+        RegisterISR label, exception_number
+.endm
+
 	RegisterISR zero, #0
 	RegisterISR misaligned, #1
 	RegisterISR dividebyzero, #2
@@ -70,7 +74,7 @@ _start:
 	RegisterISR badl2alias, #12
 	RegisterISR breakpoint, #13
 
-        RegisterISR monitor_irq, #94 /* ARM interrupt */
+        RegisterIRQ monitor_irq, #94 /* ARM interrupt */
 
 	/*
 	 * load the interrupt and normal stack pointers. these
