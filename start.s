@@ -49,31 +49,28 @@ _start:
 	 * populate the exception vector table using PC relative labels
 	 * so the code isnt position dependent
 	 */
-.macro RegExceptionHandler label, exception_number
+.macro RegisterISR label, exception_number
 	lea r2, fleh_\label
 	st r2, (r1)
 	add r1, #4
 .endm
 
-	RegExceptionHandler zero, #0
-	RegExceptionHandler misaligned, #1
-	RegExceptionHandler dividebyzero, #2
-	RegExceptionHandler undefinedinstruction, #3
-	RegExceptionHandler forbiddeninstruction, #4
-	RegExceptionHandler illegalmemory, #5
-	RegExceptionHandler buserror, #6
-	RegExceptionHandler floatingpoint, #7
-	RegExceptionHandler isp, #8
-	RegExceptionHandler dummy, #9
-	RegExceptionHandler icache, #10
-	RegExceptionHandler veccore, #11
-	RegExceptionHandler badl2alias, #12
-	RegExceptionHandler breakpoint, #13
+	RegisterISR zero, #0
+	RegisterISR misaligned, #1
+	RegisterISR dividebyzero, #2
+	RegisterISR undefinedinstruction, #3
+	RegisterISR forbiddeninstruction, #4
+	RegisterISR illegalmemory, #5
+	RegisterISR buserror, #6
+	RegisterISR floatingpoint, #7
+	RegisterISR isp, #8
+	RegisterISR dummy, #9
+	RegisterISR icache, #10
+	RegisterISR veccore, #11
+	RegisterISR badl2alias, #12
+	RegisterISR breakpoint, #13
 
-        /* register ARM IRQ */
-        mov r0, #94
-        mov r1, monitor_start
-        bl registerISR
+        RegisterISR monitor_irq, #94 /* ARM interrupt */
 
 	/*
 	 * load the interrupt and normal stack pointers. these
@@ -172,6 +169,20 @@ fleh_\label:
 	b fatal_exception
 .endm
 
+.macro IRQHandler label, number
+fleh_\label:
+        SaveRegsAll
+
+        mov r1, \number
+        bl label
+
+        ldm r16-r23, (sp++)
+	ldm r6-r15, (sp++)
+	ldm r0-r5, (sp++)
+	ld lr, (sp++)
+	rti
+.endm
+
 	ExceptionHandler zero, #0
 	ExceptionHandler misaligned, #1
 	ExceptionHandler dividebyzero, #2
@@ -188,29 +199,4 @@ fleh_\label:
 	ExceptionHandler breakpoint, #13
 	ExceptionHandler unknown, #14
 
-fleh_irq:
-	SaveRegsAll
-
-	/* top of savearea */
-	mov r0, sp
-	bl sleh_irq
-
-return_from_exception:
-	ldm r16-r23, (sp++)
-	ldm r6-r15, (sp++)
-	ldm r0-r5, (sp++)
-	ld lr, (sp++)
-	rti
-
-/* registers an ISR handler
- * r0: ISR number. r1: handler address
- * the handler is a regular C function taking the form of:
- * void isr_handler(void)
- * therefore, trampolines may be necessary
- */
-
-register_ISR:
-    /* store in IVT */
-    lea r1, (#0x1B000 + 4*r0)
-    st r0, (r1)
-    ret
+        IRQHandler monitor_irq, #94
