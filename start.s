@@ -55,7 +55,6 @@ _start:
 	add r1, #4
 .endm
 
-
 	RegExceptionHandler zero, #0
 	RegExceptionHandler misaligned, #1
 	RegExceptionHandler dividebyzero, #2
@@ -70,35 +69,11 @@ _start:
 	RegExceptionHandler veccore, #11
 	RegExceptionHandler badl2alias, #12
 	RegExceptionHandler breakpoint, #13
-	RegExceptionHandler unknown, #14
-	RegExceptionHandler unknown, #15
-	RegExceptionHandler unknown, #16
-	RegExceptionHandler unknown, #17
-	RegExceptionHandler unknown, #18
-	RegExceptionHandler unknown, #19
-	RegExceptionHandler unknown, #20
-	RegExceptionHandler unknown, #21
-	RegExceptionHandler unknown, #22
-	RegExceptionHandler unknown, #23
-	RegExceptionHandler unknown, #24
-	RegExceptionHandler unknown, #25
-	RegExceptionHandler unknown, #26
-	RegExceptionHandler unknown, #27
-	RegExceptionHandler unknown, #28
-	RegExceptionHandler unknown, #29
-	RegExceptionHandler unknown, #30
-	RegExceptionHandler unknown, #31
 
-	//add r1, r3, #252
-        add r1, r3, #128
-	lea r2, fleh_irq
-	//mov r4, #492
-        add r4, r3, #492
-
-L_setup_hw_irq:
-	st r2, (r1)
-        add r1, #4
-	ble r1, r4, L_setup_hw_irq
+        /* register ARM IRQ */
+        mov r0, #94
+        mov r1, monitor_start
+        bl registerISR
 
 	/*
 	 * load the interrupt and normal stack pointers. these
@@ -226,3 +201,16 @@ return_from_exception:
 	ldm r0-r5, (sp++)
 	ld lr, (sp++)
 	rti
+
+/* registers an ISR handler
+ * r0: ISR number. r1: handler address
+ * the handler is a regular C function taking the form of:
+ * void isr_handler(void)
+ * therefore, trampolines may be necessary
+ */
+
+register_ISR:
+    /* store in IVT */
+    lea r1, (#0x1B000 + 4*r0)
+    st r0, (r1)
+    ret
